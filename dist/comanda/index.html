@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Comandas & KDS — Restaurante Moriá</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        amberwood: '#B45309',
+                        herbal: '#15803D',
+                        darkslate: '#1C1917',
+                        creamy: '#FBF9F5',
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos de Impressão Térmica (ESC/POS 58mm / 80mm) */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #thermal-receipt-modal,
+            #thermal-receipt-modal * {
+                visibility: visible;
+            }
+            #thermal-receipt-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .thermal-paper {
+                box-shadow: none !important;
+                border: none !important;
+                width: 78mm !important;
+                max-width: 78mm !important;
+                margin: 0 auto !important;
+                padding: 2mm !important;
+                color: #000 !important;
+                background: #fff !important;
+            }
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+        }
+
+        .thermal-paper {
+            width: 320px;
+            background: #ffffff;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            line-height: 1.35;
+        }
+
+        .dashed-line {
+            border-top: 1px dashed #4b5563;
+            margin: 8px 0;
+        }
+
+        .double-line {
+            border-top: 2px solid #1f2937;
+            margin: 8px 0;
+        }
+
+        /* Serrilhado de bobina térmica */
+        .jagged-edge {
+            background: radial-gradient(circle, transparent, transparent 50%, #ffffff 50%, #ffffff 100%);
+            background-size: 10px 10px;
+        }
+    </style>
+</head>
+<body class="bg-stone-900 text-stone-100 min-h-screen font-sans flex flex-col antialiased selection:bg-amber-500 selection:text-white">
+
+    <!-- Topbar Oficial da Cozinha -->
+    <header class="bg-stone-950 border-b border-stone-800 sticky top-0 z-30 px-4 py-3 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-amber-600/30">
+                    M
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-bold text-white tracking-wide">RESTAURANTE MORIÁ</h1>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Cozinha Aberta (Almoço)
+                        </span>
+                    </div>
+                    <p class="text-xs text-stone-400">Av. Paraíso, 1093 — Paraíso do Tocantins | WhatsApp: (63) 99215-9171</p>
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="flex items-center gap-2.5">
+                <button onclick="abrirModalNovoPedido()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold shadow-md shadow-amber-600/20 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Novo Pedido Balcão
+                </button>
+                <a href="https://dluzcrm.dluz.com.br" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    Abrir no DLuz CRM
+                </a>
+                <button onclick="carregarPedidos()" title="Atualizar Pedidos" class="p-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg border border-stone-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Indicadores Rápidos -->
+    <section class="max-w-7xl mx-auto w-full px-4 pt-4 pb-2">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-stone-400">Novos Pedidos</span>
+                    <p id="stat-novos" class="text-xl font-bold text-blue-400">1</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold">📥</div>
+            </div>
+            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-stone-400">Na Cozinha / Montando</span>
+                    <p id="stat-cozinha" class="text-xl font-bold text-amber-400">1</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">🍳</div>
+            </div>
+            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-stone-400">Saiu p/ Entrega</span>
+                    <p id="stat-entrega" class="text-xl font-bold text-purple-400">1</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">🛵</div>
+            </div>
+            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-stone-400">Faturamento Hoje</span>
+                    <p id="stat-total" class="text-xl font-bold text-emerald-400">R$ 129,00</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">💰</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quadro KDS das Comandas -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-4 overflow-x-auto">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 min-w-[960px]">
+
+            <!-- Coluna 1: 📥 Novos Pedidos -->
+            <div class="bg-stone-950/70 border border-blue-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping"></span>
+                        <h2 class="font-bold text-sm text-stone-200">📥 NOVOS PEDIDOS</h2>
+                    </div>
+                    <span id="badge-novos" class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md text-xs font-bold">1</span>
+                </div>
+                <div id="col-novos" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                    <!-- Cards inseridos via JS -->
+                </div>
+            </div>
+
+            <!-- Coluna 2: 🍳 Na Cozinha / Montando -->
+            <div class="bg-stone-950/70 border border-amber-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                        <h2 class="font-bold text-sm text-stone-200">🍳 NA COZINHA</h2>
+                    </div>
+                    <span id="badge-cozinha" class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-md text-xs font-bold">1</span>
+                </div>
+                <div id="col-cozinha" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                    <!-- Cards inseridos via JS -->
+                </div>
+            </div>
+
+            <!-- Coluna 3: 🛵 Saiu pra Entrega -->
+            <div class="bg-stone-950/70 border border-purple-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                        <h2 class="font-bold text-sm text-stone-200">🛵 EM ROTA / MOTOBOY</h2>
+                    </div>
+                    <span id="badge-entrega" class="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-md text-xs font-bold">1</span>
+                </div>
+                <div id="col-entrega" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                    <!-- Cards inseridos via JS -->
+                </div>
+            </div>
+
+            <!-- Coluna 4: ✅ Concluídos -->
+            <div class="bg-stone-950/70 border border-emerald-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        <h2 class="font-bold text-sm text-stone-200">✅ ENTREGUES</h2>
+                    </div>
+                    <span id="badge-concluidos" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-md text-xs font-bold">0</span>
+                </div>
+                <div id="col-concluidos" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                    <!-- Cards inseridos via JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal de Impressão de Comanda Térmica -->
+    <div id="thermal-receipt-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="relative flex flex-col items-center">
+            
+            <!-- Barra de Ações do Modal (Oculta na Impressão) -->
+            <div class="no-print flex items-center gap-3 mb-4 bg-stone-900 border border-stone-700 px-4 py-2.5 rounded-xl shadow-2xl">
+                <button onclick="dispararImpressao()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    IMPRIMIR COMANDA (Ctrl + P)
+                </button>
+                <button onclick="fecharModalImpressao()" class="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-sm font-medium transition-colors">
+                    Fechar (Esc)
+                </button>
+            </div>
+
+            <!-- O CUPOM TÉRMICO (Formatado para 58mm / 80mm) -->
+            <div id="receipt-content" class="thermal-paper rounded-sm p-4 text-stone-900 border border-stone-300 text-xs">
+                <!-- Conteúdo preenchido dinamicamente via JS -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Novo Pedido Balcão -->
+    <div id="modal-novo-pedido" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-stone-900 border border-stone-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-stone-800 mb-4">
+                <h3 class="text-lg font-bold text-white">Lançar Novo Pedido (Balcão / Tel)</h3>
+                <button onclick="fecharModalNovoPedido()" class="text-stone-400 hover:text-white">✕</button>
+            </div>
+            <form id="form-novo-pedido" onsubmit="salvarNovoPedido(event)" class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Nome do Cliente *</label>
+                    <input type="text" id="novo-nome" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none" placeholder="Ex: João da Silva">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-300 mb-1">Telefone / WhatsApp *</label>
+                        <input type="text" id="novo-fone" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none" placeholder="(63) 99999-9999">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-300 mb-1">Tamanho da Marmita *</label>
+                        <select id="novo-tamanho" class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none">
+                            <option value="Marmita Pequena (P)|18">Marmita P — R$ 18,00</option>
+                            <option value="Marmita Média (M)|22" selected>Marmita M — R$ 22,00</option>
+                            <option value="Marmita Grande (G)|26">Marmita G — R$ 26,00</option>
+                            <option value="Marmitex Executiva Especial|30">Marmitex Executiva — R$ 30,00</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Proteína / Carne *</label>
+                    <input type="text" id="novo-carne" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none" placeholder="Ex: Carne de Sol na Brasa / Frango Grelhado">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Guarnições / Acompanhamentos</label>
+                    <input type="text" id="novo-guarnicoes" class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none" placeholder="Ex: Arroz, Feijão Tropeiro, Mandioca, Salada">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">Observações (Ex: Sem cebola, caprichar no purê)</label>
+                    <input type="text" id="novo-obs" class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none" placeholder="Opcional">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-300 mb-1">Endereço de Entrega *</label>
+                        <input type="text" id="novo-endereco" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none" placeholder="Rua / Avenida e número">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-300 mb-1">Bairro *</label>
+                        <input type="text" id="novo-bairro" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none" placeholder="Setor Pouso Alegre, Centro...">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-300 mb-1">Bebida</label>
+                        <select id="novo-bebida" class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none">
+                            <option value="|0">Nenhuma</option>
+                            <option value="Coca-Cola Lata 350ml|6">Coca-Cola Lata (+R$ 6,00)</option>
+                            <option value="Guaraná Antarctica Lata|6">Guaraná Lata (+R$ 6,00)</option>
+                            <option value="Suco Natural 500ml|8">Suco Natural (+R$ 8,00)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-300 mb-1">Forma de Pagamento *</label>
+                        <select id="novo-pagamento" class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none">
+                            <option value="PIX (PAGO)">PIX (Já Pago)</option>
+                            <option value="Cartão de Crédito/Débito">Cartão na Entrega</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="fecharModalNovoPedido()" class="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg shadow-lg shadow-amber-600/20">Salvar & Gerar Comanda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts da Aplicação KDS & Impressão -->
+    <script>
+        // Dados de Pedidos (Sincronizados com o DLuz CRM)
+        const PEDIDOS_PADRAO = [
+            {
+                id: '1001',
+                cliente: 'Marcos Vinícius Silva',
+                telefone: '5563984123344',
+                horario: '11:42',
+                status: 'novos', // novos | cozinha | entrega | concluidos
+                tamanho: 'Marmita Grande (G)',
+                preco_marmita: 26.00,
+                carne: 'Carne de Sol na Brasa',
+                guarnicoes: 'Arroz branco, Feijão Tropeiro, Mandioca frita, Vinagrete',
+                observacoes: 'SEM PIMENTA',
+                bebida: 'Coca-Cola Lata 350ml',
+                preco_bebida: 6.00,
+                taxa_entrega: 5.00,
+                endereco: 'Av. Paraíso, nº 850',
+                bairro: 'Setor Pouso Alegre',
+                pagamento: 'PIX (PAGO / COMPROVANTE)'
+            },
+            {
+                id: '1002',
+                cliente: 'Camila Ferreira Rocha',
+                telefone: '5563992341188',
+                horario: '11:28',
+                status: 'cozinha',
+                tamanho: 'Marmita Média (M)',
+                preco_marmita: 22.00,
+                carne: 'Frango Grelhado',
+                guarnicoes: 'Arroz, Feijão em caldo, Purê de Batata, Salada verde',
+                observacoes: 'Caprichar no purê',
+                bebida: null,
+                preco_bebida: 0,
+                taxa_entrega: 5.00,
+                endereco: 'Rua 4, Qd 12, Lt 08',
+                bairro: 'Setor Pouso Alegre',
+                pagamento: 'Cartão de Débito na Entrega'
+            },
+            {
+                id: '1003',
+                cliente: 'Dr. Roberto Andrade',
+                telefone: '5563981159922',
+                horario: '11:15',
+                status: 'entrega',
+                tamanho: '2x Marmita Média (M)',
+                preco_marmita: 44.00,
+                carne: 'Bife Acebolado Suculento',
+                guarnicoes: 'Arroz, Feijão tropeiro, Farofa de ovos, Salada fresca',
+                observacoes: 'Entregar na recepção do escritório',
+                bebida: '2x Suco Natural 500ml',
+                preco_bebida: 16.00,
+                taxa_entrega: 5.00,
+                endereco: 'Rua 15 de Novembro, 410 (Em frente ao Fórum)',
+                bairro: 'Centro',
+                pagamento: 'PIX (PAGO)'
+            }
+        ];
+
+        let pedidos = JSON.parse(localStorage.getItem('moria_pedidos_kds')) || PEDIDOS_PADRAO;
+
+        function salvarLocalStorage() {
+            localStorage.setItem('moria_pedidos_kds', JSON.stringify(pedidos));
+            renderizarQuadro();
+        }
+
+        function renderizarQuadro() {
+            const colNovos = document.getElementById('col-novos');
+            const colCozinha = document.getElementById('col-cozinha');
+            const colEntrega = document.getElementById('col-entrega');
+            const colConcluidos = document.getElementById('col-concluidos');
+
+            colNovos.innerHTML = '';
+            colCozinha.innerHTML = '';
+            colEntrega.innerHTML = '';
+            colConcluidos.innerHTML = '';
+
+            let cNovos = 0, cCozinha = 0, cEntrega = 0, cConcluidos = 0, totalR$ = 0;
+
+            pedidos.forEach(p => {
+                const totalPedido = (p.preco_marmita || 0) + (p.preco_bebida || 0) + (p.taxa_entrega || 0);
+                totalR$ += totalPedido;
+
+                const card = document.createElement('div');
+                card.className = "bg-stone-900 border border-stone-800 hover:border-stone-700 rounded-xl p-3.5 shadow-lg space-y-2.5 transition-all text-xs";
+                
+                let botoesAcao = '';
+                if (p.status === 'novos') {
+                    cNovos++;
+                    botoesAcao = `
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-stone-800">
+                            <button onclick="abrirModalImpressao('${p.id}')" class="flex items-center justify-center gap-1.5 py-2 px-2 bg-stone-800 hover:bg-stone-700 text-amber-400 font-bold rounded-lg border border-amber-500/30">
+                                🖨️ IMPRIMIR
+                            </button>
+                            <button onclick="moverPedido('${p.id}', 'cozinha')" class="flex items-center justify-center gap-1.5 py-2 px-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg shadow-md shadow-amber-600/20">
+                                🍳 Montar
+                            </button>
+                        </div>
+                    `;
+                } else if (p.status === 'cozinha') {
+                    cCozinha++;
+                    botoesAcao = `
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-stone-800">
+                            <button onclick="abrirModalImpressao('${p.id}')" class="flex items-center justify-center gap-1.5 py-2 px-2 bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium rounded-lg">
+                                🖨️ Re-imprimir
+                            </button>
+                            <button onclick="moverPedido('${p.id}', 'entrega')" class="flex items-center justify-center gap-1.5 py-2 px-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow-md shadow-purple-600/20">
+                                🛵 Despachar
+                            </button>
+                        </div>
+                    `;
+                } else if (p.status === 'entrega') {
+                    cEntrega++;
+                    botoesAcao = `
+                        <div class="space-y-1.5 pt-2 border-t border-stone-800">
+                            <a href="https://wa.me/${p.telefone}?text=Ol%C3%A1%20${encodeURIComponent(p.cliente.split(' ')[0])}!%20Sua%20marmita%20do%20Restaurante%20Mori%C3%A1%20acabou%20de%20sair%20para%20entrega%20com%20o%20nosso%20motoboy!%20Bom%20almo%C3%A7o!%20%F0%9F%8D%B1%F0%9F%8D%B4" target="_blank" class="w-full flex items-center justify-center gap-1.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-semibold rounded-lg border border-emerald-500/30">
+                                💬 Avisar no WhatsApp
+                            </a>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="abrirModalImpressao('${p.id}')" class="py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-400 rounded-lg">
+                                    🖨️ Comanda
+                                </button>
+                                <button onclick="moverPedido('${p.id}', 'concluidos')" class="py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">
+                                    ✅ Entregue
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    cConcluidos++;
+                    botoesAcao = `
+                        <div class="flex items-center justify-between pt-2 border-t border-stone-800 text-[11px] text-stone-500">
+                            <span>✅ Finalizado</span>
+                            <button onclick="abrirModalImpressao('${p.id}')" class="text-amber-400 hover:underline">Ver comanda</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-sm text-amber-400 font-mono">#${p.id}</span>
+                        <span class="text-stone-400 text-[11px] font-mono">⏱️ ${p.horario}</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white text-sm leading-tight">${p.cliente}</h4>
+                        <p class="text-stone-400 text-[11px]">📍 ${p.endereco} (${p.bairro})</p>
+                    </div>
+                    <div class="bg-stone-950/70 p-2.5 rounded-lg border border-stone-800 space-y-1">
+                        <p class="font-semibold text-amber-200">${p.tamanho}</p>
+                        <p class="text-stone-300">🥩 <strong class="text-white">${p.carne}</strong></p>
+                        <p class="text-stone-400 text-[11px]">🍚 ${p.guarnicoes}</p>
+                        ${p.observacoes ? `<p class="text-red-400 font-semibold text-[11px]">⚠️ Obs: ${p.observacoes}</p>` : ''}
+                        ${p.bebida ? `<p class="text-stone-300 text-[11px]">🥤 ${p.bebida}</p>` : ''}
+                    </div>
+                    <div class="flex items-center justify-between pt-1 font-mono">
+                        <span class="text-stone-400 text-[11px]">${p.pagamento.includes('PIX') ? '💚 PIX' : '💳 Cartão'}</span>
+                        <span class="text-emerald-400 font-bold text-sm">R$ ${totalPedido.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    ${botoesAcao}
+                `;
+
+                if (p.status === 'novos') colNovos.appendChild(card);
+                else if (p.status === 'cozinha') colCozinha.appendChild(card);
+                else if (p.status === 'entrega') colEntrega.appendChild(card);
+                else colConcluidos.appendChild(card);
+            });
+
+            // Atualiza badges e stats
+            document.getElementById('stat-novos').innerText = cNovos;
+            document.getElementById('badge-novos').innerText = cNovos;
+            document.getElementById('stat-cozinha').innerText = cCozinha;
+            document.getElementById('badge-cozinha').innerText = cCozinha;
+            document.getElementById('stat-entrega').innerText = cEntrega;
+            document.getElementById('badge-entrega').innerText = cEntrega;
+            document.getElementById('badge-concluidos').innerText = cConcluidos;
+            document.getElementById('stat-total').innerText = 'R$ ' + totalR$.toFixed(2).replace('.', ',');
+        }
+
+        function moverPedido(id, novoStatus) {
+            const pedido = pedidos.find(p => p.id === id);
+            if (pedido) {
+                pedido.status = novoStatus;
+                salvarLocalStorage();
+            }
+        }
+
+        // Gera a comanda formatada para bobina térmica
+        function abrirModalImpressao(id) {
+            const p = pedidos.find(item => item.id === id);
+            if (!p) return;
+
+            const totalMarmita = p.preco_marmita || 0;
+            const totalBebida = p.preco_bebida || 0;
+            const taxa = p.taxa_entrega || 0;
+            const subtotal = totalMarmita + totalBebida;
+            const totalGeral = subtotal + taxa;
+
+            const html = `
+                <div class="text-center font-bold pb-2">
+                    <p class="text-base tracking-wider">================================</p>
+                    <p class="text-sm font-extrabold tracking-widest uppercase">RESTAURANTE MORIÁ</p>
+                    <p class="text-[11px] font-normal">Sabor Caseiro & Marmitas de Qualidade</p>
+                    <p class="text-[10px] font-normal">Av. Paraíso, 1093 - Setor Pouso Alegre</p>
+                    <p class="text-[10px] font-normal">Paraíso do Tocantins - TO</p>
+                    <p class="text-[11px] font-bold">WhatsApp: (63) 99215-9171</p>
+                    <p class="text-base tracking-wider">================================</p>
+                </div>
+
+                <div class="flex justify-between font-bold text-[11px] py-1 border-b border-dashed border-stone-600">
+                    <span>PEDIDO: #${p.id}</span>
+                    <span>HORA: ${p.horario}</span>
+                </div>
+                <div class="flex justify-between text-[10px] py-0.5 border-b border-dashed border-stone-600">
+                    <span>DATA: ${new Date().toLocaleDateString('pt-BR')}</span>
+                    <span>ORIGEM: WHATSAPP</span>
+                </div>
+
+                <div class="py-2 border-b border-dashed border-stone-600">
+                    <p class="font-bold text-[11px] uppercase">CLIENTE: ${p.cliente}</p>
+                    <p class="text-[10px]">FONE: ${p.telefone}</p>
+                    <p class="font-bold text-[11px] mt-1 uppercase text-black">ENTREGAR EM:</p>
+                    <p class="font-bold text-[11px]">${p.endereco}</p>
+                    <p class="text-[10px]">BAIRRO: ${p.bairro}</p>
+                </div>
+
+                <div class="py-2 border-b border-dashed border-stone-600">
+                    <p class="font-bold text-[11px] tracking-wider mb-1">ITENS DO PEDIDO:</p>
+                    
+                    <div class="space-y-1.5 text-[11px]">
+                        <div>
+                            <div class="flex justify-between font-bold">
+                                <span>1x ${p.tamanho.toUpperCase()}</span>
+                                <span>R$ ${totalMarmita.toFixed(2).replace('.', ',')}</span>
+                            </div>
+                            <div class="pl-2 text-[10px] text-stone-800 space-y-0.5">
+                                <p>• <strong>CARNE:</strong> ${p.carne.toUpperCase()}</p>
+                                <p>• <strong>ACOMP:</strong> ${p.guarnicoes}</p>
+                            </div>
+                        </div>
+
+                        ${p.observacoes ? `
+                        <div class="my-1 p-1 bg-stone-100 border border-dashed border-stone-800 text-[10px] font-extrabold text-center">
+                            *** OBS: ${p.observacoes.toUpperCase()} ***
+                        </div>
+                        ` : ''}
+
+                        ${p.bebida ? `
+                        <div class="flex justify-between text-[11px]">
+                            <span>1x ${p.bebida.toUpperCase()}</span>
+                            <span>R$ ${totalBebida.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="py-2 space-y-1 text-[11px] border-b border-dashed border-stone-600">
+                    <div class="flex justify-between">
+                        <span>SUBTOTAL:</span>
+                        <span>R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>TAXA DE ENTREGA:</span>
+                        <span>R$ ${taxa.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div class="flex justify-between font-extrabold text-sm pt-1 border-t border-stone-800">
+                        <span>TOTAL A PAGAR:</span>
+                        <span>R$ ${totalGeral.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                </div>
+
+                <div class="py-2 text-[11px]">
+                    <p><strong class="uppercase">FORMA DE PAGAMENTO:</strong></p>
+                    <p class="font-extrabold text-xs uppercase">${p.pagamento}</p>
+                </div>
+
+                <div class="text-center font-bold pt-2 border-t-2 border-stone-800 text-[10px] space-y-1">
+                    <p class="tracking-wider">================================</p>
+                    <p>MARMITA FEITA COM CARINHO!</p>
+                    <p>MUITO OBRIGADO PELA PREFERÊNCIA!</p>
+                    <p class="text-xs">BOM ALMOÇO! 🍽️</p>
+                    <p class="tracking-wider">================================</p>
+                </div>
+            `;
+
+            document.getElementById('receipt-content').innerHTML = html;
+            document.getElementById('thermal-receipt-modal').classList.remove('hidden');
+        }
+
+        function fecharModalImpressao() {
+            document.getElementById('thermal-receipt-modal').classList.add('hidden');
+        }
+
+        function dispararImpressao() {
+            window.print();
+        }
+
+        // Funções do Modal Novo Pedido
+        function abrirModalNovoPedido() {
+            document.getElementById('modal-novo-pedido').classList.remove('hidden');
+        }
+
+        function fecharModalNovoPedido() {
+            document.getElementById('modal-novo-pedido').classList.add('hidden');
+        }
+
+        function salvarNovoPedido(e) {
+            e.preventDefault();
+            const tamanhoVal = document.getElementById('novo-tamanho').value.split('|');
+            const bebidaVal = document.getElementById('novo-bebida').value.split('|');
+
+            const novo = {
+                id: String(Math.floor(1004 + Math.random() * 8990)),
+                cliente: document.getElementById('novo-nome').value,
+                telefone: document.getElementById('novo-fone').value.replace(/\D/g, ''),
+                horario: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                status: 'novos',
+                tamanho: tamanhoVal[0],
+                preco_marmita: parseFloat(tamanhoVal[1]),
+                carne: document.getElementById('novo-carne').value,
+                guarnicoes: document.getElementById('novo-guarnicoes').value || 'Acompanhamentos do dia',
+                observacoes: document.getElementById('novo-obs').value,
+                bebida: bebidaVal[0] || null,
+                preco_bebida: parseFloat(bebidaVal[1]) || 0,
+                taxa_entrega: 5.00,
+                endereco: document.getElementById('novo-endereco').value,
+                bairro: document.getElementById('novo-bairro').value,
+                pagamento: document.getElementById('novo-pagamento').value
+            };
+
+            pedidos.unshift(novo);
+            salvarLocalStorage();
+            fecharModalNovoPedido();
+            document.getElementById('form-novo-pedido').reset();
+
+            // Abre a comanda imediatamente para impressão
+            abrirModalImpressao(novo.id);
+        }
+
+        // Fecha modais com a tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                fecharModalImpressao();
+                fecharModalNovoPedido();
+            }
+        });
+
+        // Inicialização
+        renderizarQuadro();
+    </script>
+</body>
+</html>
