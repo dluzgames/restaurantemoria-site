@@ -71,9 +71,30 @@
             font-family: 'JetBrains Mono', 'Courier New', monospace;
             line-height: 1.35;
         }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .pulse-live {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-stone-900 text-stone-100 min-h-screen font-sans flex flex-col antialiased selection:bg-amber-500 selection:text-white">
+
+    <!-- Toast de Notificação de Novo Pedido (Auto-Update) -->
+    <div id="toast-novo-pedido" class="fixed top-4 right-4 z-50 transform translate-y-[-150%] transition-transform duration-500 max-w-sm w-full bg-emerald-600 text-white p-4 rounded-2xl shadow-2xl border-2 border-emerald-400 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl animate-bounce">🔔</span>
+            <div>
+                <h4 class="font-extrabold text-sm uppercase tracking-wide">NOVO PEDIDO CHEGOU!</h4>
+                <p id="toast-desc" class="text-xs text-emerald-100">#1004 — Marmita Grande</p>
+            </div>
+        </div>
+        <button onclick="fecharToast()" class="text-emerald-200 hover:text-white font-bold p-1">✕</button>
+    </div>
 
     <!-- TELA DE BLOQUEIO / PIN GATE DE SEGURANÇA -->
     <div id="pin-gate-screen" class="fixed inset-0 z-50 bg-stone-950 flex flex-col items-center justify-center p-4">
@@ -136,24 +157,44 @@
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Cozinha Aberta (Almoço)
                             </span>
+                            <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
+                                Tempo Real Ativo
+                            </span>
                         </div>
                         <p class="text-xs text-stone-400">Av. Paraíso, 1093 — Paraíso do Tocantins | WhatsApp: (63) 99215-9171</p>
                     </div>
                 </div>
 
                 <!-- Ações Rápidas -->
-                <div class="flex items-center gap-2.5">
-                    <button onclick="abrirModalNovoPedido()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold shadow-md shadow-amber-600/20 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Novo Pedido Balcão
+                <div class="flex items-center gap-2">
+                    <!-- Botão de Demonstração Ao Vivo -->
+                    <button onclick="simularPedidoAoVivo()" title="Simular que um cliente acabou de pedir pelo WhatsApp" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold border border-emerald-500/40 shadow-md shadow-emerald-700/20 transition-all">
+                        <span class="text-base">🔔</span>
+                        <span class="hidden sm:inline">Simular Pedido do WhatsApp</span>
+                        <span class="sm:hidden">Simular</span>
                     </button>
-                    <a href="https://dluzcrm.dluz.com.br" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
-                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                        DLuz CRM
+
+                    <!-- Novo Pedido Balcão -->
+                    <button onclick="abrirModalNovoPedido()" class="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold shadow-md shadow-amber-600/20 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>+ Pedido Balcão</span>
+                    </button>
+
+                    <!-- Ativar Som / Testar Som -->
+                    <button id="btn-som" onclick="alternarSom()" title="Alerta Sonoro" class="p-2 bg-stone-800 hover:bg-stone-700 text-amber-400 rounded-lg border border-stone-700 transition-colors">
+                        🔔
+                    </button>
+
+                    <!-- DLuz CRM -->
+                    <a href="https://dluzcrm.dluz.com.br" target="_blank" class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        CRM
                     </a>
-                    <button onclick="bloquearTela()" title="Bloquear Painel" class="inline-flex items-center gap-1 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
+
+                    <!-- Bloquear -->
+                    <button onclick="bloquearTela()" title="Bloquear Painel" class="inline-flex items-center gap-1 px-2.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
                         <svg class="w-3.5 h-3.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        Bloquear
                     </button>
                 </div>
             </div>
@@ -360,6 +401,49 @@
 
     <!-- Scripts da Aplicação KDS & Impressão -->
     <script>
+        // Som e AudioContext
+        let somHabilitado = true;
+
+        function tocarAlertaNovoPedido() {
+            if (!somHabilitado) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = audioCtx.currentTime;
+                
+                // Primeiro tom (D5 - 587Hz)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, now);
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.5);
+
+                // Segundo tom agudo e chamativo (A5 - 880Hz)
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880, now + 0.14);
+                gain2.gain.setValueAtTime(0.4, now + 0.14);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now + 0.14);
+                osc2.stop(now + 1.1);
+            } catch(e) {
+                console.warn('Erro ao tocar som:', e);
+            }
+        }
+
+        function alternarSom() {
+            somHabilitado = !somHabilitado;
+            document.getElementById('btn-som').innerText = somHabilitado ? '🔔' : '🔕';
+            if (somHabilitado) tocarAlertaNovoPedido();
+        }
+
         // Sistema de PIN de Segurança
         let pinAtual = '';
         const PIN_CORRETO = '1093'; // Número do Restaurante na Av. Paraíso, 1093
@@ -370,6 +454,7 @@
                 document.getElementById('pin-gate-screen').classList.add('hidden');
                 document.getElementById('kds-main-content').classList.remove('hidden');
                 renderizarQuadro();
+                iniciarAutoSync();
             } else {
                 document.getElementById('pin-gate-screen').classList.remove('hidden');
                 document.getElementById('kds-main-content').classList.add('hidden');
@@ -412,6 +497,7 @@
                 document.getElementById('kds-main-content').classList.remove('hidden');
                 limparPin();
                 renderizarQuadro();
+                iniciarAutoSync();
             } else {
                 document.getElementById('pin-error-msg').classList.remove('hidden');
                 setTimeout(() => limparPin(), 600);
@@ -437,7 +523,7 @@
             }
         });
 
-        // Dados de Pedidos (Sincronizados com o DLuz CRM)
+        // Dados de Pedidos
         const PEDIDOS_PADRAO = [
             {
                 id: '1001',
@@ -496,10 +582,84 @@
         ];
 
         let pedidos = JSON.parse(localStorage.getItem('moria_pedidos_kds')) || PEDIDOS_PADRAO;
+        let quantidadePedidosAnterior = pedidos.length;
 
         function salvarLocalStorage() {
             localStorage.setItem('moria_pedidos_kds', JSON.stringify(pedidos));
             renderizarQuadro();
+        }
+
+        // Função de Demonstração Ao Vivo
+        function simularPedidoAoVivo() {
+            const nomes = ['Lucas Oliveira', 'Fernanda Souza', 'Rogério Santos', 'Dr. Eduardo Lima', 'Patrícia Mendes'];
+            const carnes = ['Costela no Bafo com Mandioca', 'Carne de Sol na Brasa', 'Frango ao Molho com Quiabo', 'Bife Acebolado Especial'];
+            const tamanhos = [
+                { nome: 'Marmita Grande (G)', preco: 26.00 },
+                { nome: 'Marmitex Executiva Especial', preco: 30.00 },
+                { nome: 'Marmita Média (M)', preco: 22.00 }
+            ];
+
+            const nomeEscolhido = nomes[Math.floor(Math.random() * nomes.length)];
+            const carneEscolhida = carnes[Math.floor(Math.random() * carnes.length)];
+            const tamEscolhido = tamanhos[Math.floor(Math.random() * tamanhos.length)];
+            const novoId = String(Math.floor(1004 + Math.random() * 8990));
+
+            const novoPedido = {
+                id: novoId,
+                cliente: nomeEscolhido,
+                telefone: '556399' + Math.floor(1000000 + Math.random() * 8999999),
+                horario: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                status: 'novos',
+                tamanho: tamEscolhido.nome,
+                preco_marmita: tamEscolhido.preco,
+                carne: carneEscolhida,
+                guarnicoes: 'Arroz branco, Feijão Tropeiro, Mandioca frita, Vinagrete',
+                observacoes: 'Pedido feito pelo WhatsApp via Robô Moriá',
+                bebida: 'Coca-Cola Lata 350ml',
+                preco_bebida: 6.00,
+                taxa_entrega: 5.00,
+                endereco: 'Av. Bernardo Sayão, nº ' + Math.floor(100 + Math.random() * 900),
+                bairro: 'Setor Serrano',
+                pagamento: 'PIX (PAGO / COMPROVANTE)'
+            };
+
+            pedidos.unshift(novoPedido);
+            salvarLocalStorage();
+
+            // Toca som de novo pedido e exibe toast
+            tocarAlertaNovoPedido();
+            mostrarToast(novoPedido);
+        }
+
+        function mostrarToast(p) {
+            const toast = document.getElementById('toast-novo-pedido');
+            document.getElementById('toast-desc').innerText = `#${p.id} — ${p.cliente} (${p.tamanho})`;
+            toast.classList.remove('translate-y-[-150%]');
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-150%]');
+            }, 6000);
+        }
+
+        function fecharToast() {
+            document.getElementById('toast-novo-pedido').classList.add('translate-y-[-150%]');
+        }
+
+        // Auto-Polling em Segundo Plano (Verifica se outro dispositivo/bot adicionou pedido)
+        function iniciarAutoSync() {
+            // Sincroniza a cada 3 segundos com localStorage e verifica novos pedidos
+            setInterval(() => {
+                const armazenados = JSON.parse(localStorage.getItem('moria_pedidos_kds')) || PEDIDOS_PADRAO;
+                if (armazenados.length > pedidos.length) {
+                    // Novo pedido detectado de outro lugar!
+                    pedidos = armazenados;
+                    tocarAlertaNovoPedido();
+                    mostrarToast(pedidos[0]);
+                    renderizarQuadro();
+                } else if (JSON.stringify(armazenados) !== JSON.stringify(pedidos)) {
+                    pedidos = armazenados;
+                    renderizarQuadro();
+                }
+            }, 3000);
         }
 
         function renderizarQuadro() {
@@ -770,7 +930,8 @@
             fecharModalNovoPedido();
             document.getElementById('form-novo-pedido').reset();
 
-            // Abre a comanda imediatamente para impressão
+            // Toca o alerta sonoro e abre a comanda
+            tocarAlertaNovoPedido();
             abrirModalImpressao(novo.id);
         }
 
