@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Central de Comandas & KDS — Restaurante Moriá</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -71,158 +71,192 @@
             font-family: 'JetBrains Mono', 'Courier New', monospace;
             line-height: 1.35;
         }
-
-        .dashed-line {
-            border-top: 1px dashed #4b5563;
-            margin: 8px 0;
-        }
-
-        .double-line {
-            border-top: 2px solid #1f2937;
-            margin: 8px 0;
-        }
-
-        /* Serrilhado de bobina térmica */
-        .jagged-edge {
-            background: radial-gradient(circle, transparent, transparent 50%, #ffffff 50%, #ffffff 100%);
-            background-size: 10px 10px;
-        }
     </style>
 </head>
 <body class="bg-stone-900 text-stone-100 min-h-screen font-sans flex flex-col antialiased selection:bg-amber-500 selection:text-white">
 
-    <!-- Topbar Oficial da Cozinha -->
-    <header class="bg-stone-950 border-b border-stone-800 sticky top-0 z-30 px-4 py-3 shadow-md">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-amber-600/30">
-                    M
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-lg font-bold text-white tracking-wide">RESTAURANTE MORIÁ</h1>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Cozinha Aberta (Almoço)
-                        </span>
-                    </div>
-                    <p class="text-xs text-stone-400">Av. Paraíso, 1093 — Paraíso do Tocantins | WhatsApp: (63) 99215-9171</p>
-                </div>
+    <!-- TELA DE BLOQUEIO / PIN GATE DE SEGURANÇA -->
+    <div id="pin-gate-screen" class="fixed inset-0 z-50 bg-stone-950 flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-stone-900 border border-stone-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
+            <div class="w-16 h-16 rounded-2xl bg-amber-600/20 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto text-3xl font-black shadow-inner">
+                🔒
+            </div>
+            <div>
+                <h2 class="text-xl font-extrabold text-white tracking-wide">ÁREA RESTRITA</h2>
+                <p class="text-xs text-amber-400 font-bold uppercase tracking-wider mt-1">Cozinha & Central de Comandas</p>
+                <p class="text-xs text-stone-400 mt-2">Digite o PIN de 4 dígitos da equipe do Restaurante Moriá para acessar os pedidos.</p>
             </div>
 
-            <!-- Ações Rápidas -->
-            <div class="flex items-center gap-2.5">
-                <button onclick="abrirModalNovoPedido()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold shadow-md shadow-amber-600/20 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Novo Pedido Balcão
-                </button>
-                <a href="https://dluzcrm.dluz.com.br" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
-                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                    Abrir no DLuz CRM
-                </a>
-                <button onclick="carregarPedidos()" title="Atualizar Pedidos" class="p-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg border border-stone-700 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                </button>
+            <!-- Display do PIN -->
+            <div class="flex items-center justify-center gap-3 py-2">
+                <span id="pin-dot-1" class="w-4 h-4 rounded-full border-2 border-stone-600 bg-stone-950 transition-all"></span>
+                <span id="pin-dot-2" class="w-4 h-4 rounded-full border-2 border-stone-600 bg-stone-950 transition-all"></span>
+                <span id="pin-dot-3" class="w-4 h-4 rounded-full border-2 border-stone-600 bg-stone-950 transition-all"></span>
+                <span id="pin-dot-4" class="w-4 h-4 rounded-full border-2 border-stone-600 bg-stone-950 transition-all"></span>
+            </div>
+            <p id="pin-error-msg" class="text-xs text-red-400 font-semibold min-h-[16px] hidden">PIN incorreto! Tente novamente.</p>
+
+            <!-- Teclado Numérico (Touch / Mouse) -->
+            <div class="grid grid-cols-3 gap-2.5 max-w-[260px] mx-auto">
+                <button type="button" onclick="digitarPin('1')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">1</button>
+                <button type="button" onclick="digitarPin('2')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">2</button>
+                <button type="button" onclick="digitarPin('3')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">3</button>
+                <button type="button" onclick="digitarPin('4')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">4</button>
+                <button type="button" onclick="digitarPin('5')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">5</button>
+                <button type="button" onclick="digitarPin('6')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">6</button>
+                <button type="button" onclick="digitarPin('7')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">7</button>
+                <button type="button" onclick="digitarPin('8')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">8</button>
+                <button type="button" onclick="digitarPin('9')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">9</button>
+                <button type="button" onclick="limparPin()" class="h-14 bg-stone-950 hover:bg-stone-800 text-stone-400 font-semibold text-sm rounded-xl transition">Limpar</button>
+                <button type="button" onclick="digitarPin('0')" class="h-14 bg-stone-800 hover:bg-stone-700 active:scale-95 text-white font-bold text-xl rounded-xl transition">0</button>
+                <button type="button" onclick="confirmarPin()" class="h-14 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold text-sm rounded-xl shadow-lg shadow-amber-600/30 transition">OK</button>
+            </div>
+
+            <div class="pt-2 text-[11px] text-stone-500 flex items-center justify-between border-t border-stone-800/80">
+                <span>PIN Padrão: <strong class="text-stone-300">1093</strong></span>
+                <a href="/" class="text-amber-500 hover:underline">Voltar ao Cardápio</a>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Indicadores Rápidos -->
-    <section class="max-w-7xl mx-auto w-full px-4 pt-4 pb-2">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-medium text-stone-400">Novos Pedidos</span>
-                    <p id="stat-novos" class="text-xl font-bold text-blue-400">1</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold">📥</div>
-            </div>
-            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-medium text-stone-400">Na Cozinha / Montando</span>
-                    <p id="stat-cozinha" class="text-xl font-bold text-amber-400">1</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">🍳</div>
-            </div>
-            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-medium text-stone-400">Saiu p/ Entrega</span>
-                    <p id="stat-entrega" class="text-xl font-bold text-purple-400">1</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">🛵</div>
-            </div>
-            <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-medium text-stone-400">Faturamento Hoje</span>
-                    <p id="stat-total" class="text-xl font-bold text-emerald-400">R$ 129,00</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">💰</div>
-            </div>
-        </div>
-    </section>
+    <!-- CONTEÚDO PRINCIPAL DO KDS (PROTEGIDO) -->
+    <div id="kds-main-content" class="hidden flex-1 flex flex-col">
 
-    <!-- Quadro KDS das Comandas -->
-    <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-4 overflow-x-auto">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 min-w-[960px]">
-
-            <!-- Coluna 1: 📥 Novos Pedidos -->
-            <div class="bg-stone-950/70 border border-blue-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
-                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping"></span>
-                        <h2 class="font-bold text-sm text-stone-200">📥 NOVOS PEDIDOS</h2>
+        <!-- Topbar Oficial da Cozinha -->
+        <header class="bg-stone-950 border-b border-stone-800 sticky top-0 z-30 px-4 py-3 shadow-md">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-amber-600/30">
+                        M
                     </div>
-                    <span id="badge-novos" class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md text-xs font-bold">1</span>
-                </div>
-                <div id="col-novos" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
-                    <!-- Cards inseridos via JS -->
-                </div>
-            </div>
-
-            <!-- Coluna 2: 🍳 Na Cozinha / Montando -->
-            <div class="bg-stone-950/70 border border-amber-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
-                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                        <h2 class="font-bold text-sm text-stone-200">🍳 NA COZINHA</h2>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-lg font-bold text-white tracking-wide">RESTAURANTE MORIÁ</h1>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Cozinha Aberta (Almoço)
+                            </span>
+                        </div>
+                        <p class="text-xs text-stone-400">Av. Paraíso, 1093 — Paraíso do Tocantins | WhatsApp: (63) 99215-9171</p>
                     </div>
-                    <span id="badge-cozinha" class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-md text-xs font-bold">1</span>
                 </div>
-                <div id="col-cozinha" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
-                    <!-- Cards inseridos via JS -->
+
+                <!-- Ações Rápidas -->
+                <div class="flex items-center gap-2.5">
+                    <button onclick="abrirModalNovoPedido()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold shadow-md shadow-amber-600/20 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Novo Pedido Balcão
+                    </button>
+                    <a href="https://dluzcrm.dluz.com.br" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        DLuz CRM
+                    </a>
+                    <button onclick="bloquearTela()" title="Bloquear Painel" class="inline-flex items-center gap-1 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs font-medium border border-stone-700 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Bloquear
+                    </button>
                 </div>
             </div>
+        </header>
 
-            <!-- Coluna 3: 🛵 Saiu pra Entrega -->
-            <div class="bg-stone-950/70 border border-purple-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
-                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                        <h2 class="font-bold text-sm text-stone-200">🛵 EM ROTA / MOTOBOY</h2>
+        <!-- Indicadores Rápidos -->
+        <section class="max-w-7xl mx-auto w-full px-4 pt-4 pb-2">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-medium text-stone-400">Novos Pedidos</span>
+                        <p id="stat-novos" class="text-xl font-bold text-blue-400">1</p>
                     </div>
-                    <span id="badge-entrega" class="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-md text-xs font-bold">1</span>
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold">📥</div>
                 </div>
-                <div id="col-entrega" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
-                    <!-- Cards inseridos via JS -->
-                </div>
-            </div>
-
-            <!-- Coluna 4: ✅ Concluídos -->
-            <div class="bg-stone-950/70 border border-emerald-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
-                <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        <h2 class="font-bold text-sm text-stone-200">✅ ENTREGUES</h2>
+                <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-medium text-stone-400">Na Cozinha / Montando</span>
+                        <p id="stat-cozinha" class="text-xl font-bold text-amber-400">1</p>
                     </div>
-                    <span id="badge-concluidos" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-md text-xs font-bold">0</span>
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">🍳</div>
                 </div>
-                <div id="col-concluidos" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
-                    <!-- Cards inseridos via JS -->
+                <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-medium text-stone-400">Saiu p/ Entrega</span>
+                        <p id="stat-entrega" class="text-xl font-bold text-purple-400">1</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">🛵</div>
+                </div>
+                <div class="bg-stone-800/60 border border-stone-700/60 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-medium text-stone-400">Faturamento Hoje</span>
+                        <p id="stat-total" class="text-xl font-bold text-emerald-400">R$ 129,00</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">💰</div>
                 </div>
             </div>
+        </section>
 
-        </div>
-    </main>
+        <!-- Quadro KDS das Comandas -->
+        <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-4 overflow-x-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 min-w-[960px]">
+
+                <!-- Coluna 1: 📥 Novos Pedidos -->
+                <div class="bg-stone-950/70 border border-blue-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                    <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping"></span>
+                            <h2 class="font-bold text-sm text-stone-200">📥 NOVOS PEDIDOS</h2>
+                        </div>
+                        <span id="badge-novos" class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md text-xs font-bold">1</span>
+                    </div>
+                    <div id="col-novos" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                        <!-- Cards inseridos via JS -->
+                    </div>
+                </div>
+
+                <!-- Coluna 2: 🍳 Na Cozinha / Montando -->
+                <div class="bg-stone-950/70 border border-amber-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                    <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <h2 class="font-bold text-sm text-stone-200">🍳 NA COZINHA</h2>
+                        </div>
+                        <span id="badge-cozinha" class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-md text-xs font-bold">1</span>
+                    </div>
+                    <div id="col-cozinha" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                        <!-- Cards inseridos via JS -->
+                    </div>
+                </div>
+
+                <!-- Coluna 3: 🛵 Saiu pra Entrega -->
+                <div class="bg-stone-950/70 border border-purple-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                    <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                            <h2 class="font-bold text-sm text-stone-200">🛵 EM ROTA / MOTOBOY</h2>
+                        </div>
+                        <span id="badge-entrega" class="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-md text-xs font-bold">1</span>
+                    </div>
+                    <div id="col-entrega" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                        <!-- Cards inseridos via JS -->
+                    </div>
+                </div>
+
+                <!-- Coluna 4: ✅ Concluídos -->
+                <div class="bg-stone-950/70 border border-emerald-500/30 rounded-2xl p-3 flex flex-col min-h-[550px]">
+                    <div class="flex items-center justify-between pb-3 border-b border-stone-800 px-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <h2 class="font-bold text-sm text-stone-200">✅ ENTREGUES</h2>
+                        </div>
+                        <span id="badge-concluidos" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-md text-xs font-bold">0</span>
+                    </div>
+                    <div id="col-concluidos" class="space-y-3 mt-3 flex-1 overflow-y-auto pr-1">
+                        <!-- Cards inseridos via JS -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+    </div>
 
     <!-- Modal de Impressão de Comanda Térmica -->
     <div id="thermal-receipt-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
@@ -326,6 +360,83 @@
 
     <!-- Scripts da Aplicação KDS & Impressão -->
     <script>
+        // Sistema de PIN de Segurança
+        let pinAtual = '';
+        const PIN_CORRETO = '1093'; // Número do Restaurante na Av. Paraíso, 1093
+        const PIN_BACKUP = '2026';
+
+        function verificarAutenticacao() {
+            if (sessionStorage.getItem('moria_kds_unlocked') === 'true') {
+                document.getElementById('pin-gate-screen').classList.add('hidden');
+                document.getElementById('kds-main-content').classList.remove('hidden');
+                renderizarQuadro();
+            } else {
+                document.getElementById('pin-gate-screen').classList.remove('hidden');
+                document.getElementById('kds-main-content').classList.add('hidden');
+            }
+        }
+
+        function digitarPin(digito) {
+            if (pinAtual.length < 4) {
+                pinAtual += digito;
+                atualizarDots();
+                if (pinAtual.length === 4) {
+                    confirmarPin();
+                }
+            }
+        }
+
+        function limparPin() {
+            pinAtual = '';
+            atualizarDots();
+            document.getElementById('pin-error-msg').classList.add('hidden');
+        }
+
+        function atualizarDots() {
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById('pin-dot-' + i);
+                if (i <= pinAtual.length) {
+                    dot.classList.add('bg-amber-500', 'border-amber-500');
+                    dot.classList.remove('bg-stone-950', 'border-stone-600');
+                } else {
+                    dot.classList.remove('bg-amber-500', 'border-amber-500');
+                    dot.classList.add('bg-stone-950', 'border-stone-600');
+                }
+            }
+        }
+
+        function confirmarPin() {
+            if (pinAtual === PIN_CORRETO || pinAtual === PIN_BACKUP) {
+                sessionStorage.setItem('moria_kds_unlocked', 'true');
+                document.getElementById('pin-gate-screen').classList.add('hidden');
+                document.getElementById('kds-main-content').classList.remove('hidden');
+                limparPin();
+                renderizarQuadro();
+            } else {
+                document.getElementById('pin-error-msg').classList.remove('hidden');
+                setTimeout(() => limparPin(), 600);
+            }
+        }
+
+        function bloquearTela() {
+            sessionStorage.removeItem('moria_kds_unlocked');
+            verificarAutenticacao();
+        }
+
+        // Suporte a teclado físico
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('pin-gate-screen').classList.contains('hidden')) {
+                if (/^[0-9]$/.test(e.key)) {
+                    digitarPin(e.key);
+                } else if (e.key === 'Backspace') {
+                    pinAtual = pinAtual.slice(0, -1);
+                    atualizarDots();
+                } else if (e.key === 'Enter') {
+                    confirmarPin();
+                }
+            }
+        });
+
         // Dados de Pedidos (Sincronizados com o DLuz CRM)
         const PEDIDOS_PADRAO = [
             {
@@ -671,8 +782,8 @@
             }
         });
 
-        // Inicialização
-        renderizarQuadro();
+        // Inicialização com checagem de PIN
+        verificarAutenticacao();
     </script>
 </body>
 </html>
