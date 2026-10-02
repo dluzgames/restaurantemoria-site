@@ -168,6 +168,13 @@
 
                 <!-- Ações Rápidas -->
                 <div class="flex items-center gap-2">
+                    <!-- Editar Cardápio de Hoje -->
+                    <button onclick="abrirModalCardapioDia()" title="Editar Carnes de Hoje e Preços" class="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg text-xs font-bold border border-amber-500/30 shadow-sm transition-all">
+                        <span class="text-base">📋</span>
+                        <span class="hidden sm:inline">Cardápio de Hoje</span>
+                        <span class="sm:hidden">Cardápio</span>
+                    </button>
+
                     <!-- Botão de Demonstração Ao Vivo -->
                     <button onclick="simularPedidoAoVivo()" title="Simular que um cliente acabou de pedir pelo WhatsApp" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold border border-emerald-500/40 shadow-md shadow-emerald-700/20 transition-all">
                         <span class="text-base">🔔</span>
@@ -319,6 +326,96 @@
                 <!-- Conteúdo preenchido dinamicamente via JS -->
             </div>
 
+        </div>
+    </div>
+
+    <!-- Modal Cardápio do Dia & Preços (Edição Rápida) -->
+    <div id="modal-cardapio-dia" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-stone-900 border border-stone-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-stone-800 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-lg">
+                        📋
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white leading-tight">Cardápio de Hoje & Preços</h3>
+                        <p class="text-[11px] text-amber-400 font-medium">Troca diária em 20 segundos • Restaurante Moriá</p>
+                    </div>
+                </div>
+                <button onclick="fecharModalCardapioDia()" class="text-stone-400 hover:text-white p-1 text-base">✕</button>
+            </div>
+
+            <form id="form-cardapio-dia" onsubmit="salvarCardapioDia(event)" class="space-y-4 text-sm">
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-semibold text-stone-200">
+                            🥩 Carnes do Dia (separadas por vírgula) *
+                        </label>
+                        <span class="text-[10px] text-stone-400 font-mono">Ex: Bife, Costela, Frango</span>
+                    </div>
+                    <textarea id="cardapio-carnes" rows="3" required class="w-full bg-stone-950 border border-stone-700 rounded-lg p-2.5 text-white focus:border-amber-500 focus:outline-none text-xs leading-relaxed" placeholder="Carne de Sol na Brasa, Frango Grelhado Suculento, Bife Acebolado, Costela no Bafo"></textarea>
+                    <p class="text-[10px] text-stone-400 mt-0.5">Aparece na tela de pedidos e nas opções sugeridas pela IA do WhatsApp.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-200 mb-1">
+                        🥗 Guarnições & Acompanhamentos do Dia *
+                    </label>
+                    <textarea id="cardapio-guarnicoes" rows="2" required class="w-full bg-stone-950 border border-stone-700 rounded-lg p-2.5 text-white focus:border-amber-500 focus:outline-none text-xs leading-relaxed" placeholder="Arroz branco, Feijão tropeiro da casa, Mandioca frita, Vinagrete, Salada fresca"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-200 mb-1">
+                        ⭐ Prato Especial / Destaque de Hoje (Opcional)
+                    </label>
+                    <input type="text" id="cardapio-especial" class="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none text-xs" placeholder="Ex: Feijoada Completa com Torresmo ou Galinhada com Pequi">
+                </div>
+
+                <div class="border-t border-stone-800 pt-3">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">💰 Preço das Marmitas (R$)</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-stone-400 mb-0.5">Marmita P (R$)</label>
+                            <input type="number" step="0.50" id="preco-p" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-2.5 py-1.5 text-white font-bold text-xs focus:border-amber-500 focus:outline-none" value="18.00">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-stone-400 mb-0.5">Marmita M (R$)</label>
+                            <input type="number" step="0.50" id="preco-m" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-2.5 py-1.5 text-white font-bold text-xs focus:border-amber-500 focus:outline-none" value="22.00">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-stone-400 mb-0.5">Marmita G (R$)</label>
+                            <input type="number" step="0.50" id="preco-g" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-2.5 py-1.5 text-white font-bold text-xs focus:border-amber-500 focus:outline-none" value="26.00">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-stone-400 mb-0.5">Executiva (R$)</label>
+                            <input type="number" step="0.50" id="preco-exec" required class="w-full bg-stone-950 border border-stone-700 rounded-lg px-2.5 py-1.5 text-white font-bold text-xs focus:border-amber-500 focus:outline-none" value="30.00">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <span class="text-stone-400">Taxa de Entrega Padrão (Cidade):</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-stone-400">R$</span>
+                        <input type="number" step="0.50" id="taxa-entrega-val" required class="w-20 bg-stone-950 border border-stone-700 rounded-lg px-2 py-1 text-white font-bold text-xs focus:border-amber-500 focus:outline-none" value="5.00">
+                    </div>
+                </div>
+
+                <div id="cardapio-feedback-msg" class="hidden p-2 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-semibold text-center">
+                    ✅ Cardápio do dia salvo com sucesso!
+                </div>
+
+                <div class="pt-3 border-t border-stone-800 flex flex-wrap items-center justify-between gap-2">
+                    <button type="button" onclick="copiarStatusZap()" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-700/40 hover:bg-emerald-600/60 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-semibold transition">
+                        <span>📲</span>
+                        <span>Copiar p/ Status do WhatsApp</span>
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="fecharModalCardapioDia()" class="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg text-xs">Fechar</button>
+                        <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg shadow-lg shadow-amber-600/30 text-xs transition">Salvar Cardápio</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -581,6 +678,110 @@
             }
         ];
 
+        // Sistema de Cardápio do Dia & Preços
+        const CARDAPIO_PADRAO = {
+            carnes: 'Carne de Sol na Brasa, Frango Grelhado Suculento, Bife Acebolado, Costela no Bafo',
+            guarnicoes: 'Arroz branco, Feijão tropeiro da casa, Mandioca frita, Vinagrete, Salada fresca',
+            especial: 'Feijoada Completa com Torresmo',
+            preco_p: 18.00,
+            preco_m: 22.00,
+            preco_g: 26.00,
+            preco_exec: 30.00,
+            taxa_entrega: 5.00
+        };
+
+        let cardapioAtual = JSON.parse(localStorage.getItem('moria_cardapio_hoje')) || CARDAPIO_PADRAO;
+
+        function abrirModalCardapioDia() {
+            document.getElementById('cardapio-carnes').value = cardapioAtual.carnes;
+            document.getElementById('cardapio-guarnicoes').value = cardapioAtual.guarnicoes;
+            document.getElementById('cardapio-especial').value = cardapioAtual.especial || '';
+            document.getElementById('preco-p').value = parseFloat(cardapioAtual.preco_p).toFixed(2);
+            document.getElementById('preco-m').value = parseFloat(cardapioAtual.preco_m).toFixed(2);
+            document.getElementById('preco-g').value = parseFloat(cardapioAtual.preco_g).toFixed(2);
+            document.getElementById('preco-exec').value = parseFloat(cardapioAtual.preco_exec).toFixed(2);
+            document.getElementById('taxa-entrega-val').value = parseFloat(cardapioAtual.taxa_entrega).toFixed(2);
+            document.getElementById('cardapio-feedback-msg').classList.add('hidden');
+            document.getElementById('modal-cardapio-dia').classList.remove('hidden');
+        }
+
+        function fecharModalCardapioDia() {
+            document.getElementById('modal-cardapio-dia').classList.add('hidden');
+        }
+
+        function salvarCardapioDia(e) {
+            e.preventDefault();
+            cardapioAtual = {
+                carnes: document.getElementById('cardapio-carnes').value.trim(),
+                guarnicoes: document.getElementById('cardapio-guarnicoes').value.trim(),
+                especial: document.getElementById('cardapio-especial').value.trim(),
+                preco_p: parseFloat(document.getElementById('preco-p').value) || 18.00,
+                preco_m: parseFloat(document.getElementById('preco-m').value) || 22.00,
+                preco_g: parseFloat(document.getElementById('preco-g').value) || 26.00,
+                preco_exec: parseFloat(document.getElementById('preco-exec').value) || 30.00,
+                taxa_entrega: parseFloat(document.getElementById('taxa-entrega-val').value) || 5.00
+            };
+
+            localStorage.setItem('moria_cardapio_hoje', JSON.stringify(cardapioAtual));
+            atualizarOpcoesModalNovoPedido();
+
+            const feedback = document.getElementById('cardapio-feedback-msg');
+            feedback.classList.remove('hidden');
+            setTimeout(() => {
+                feedback.classList.add('hidden');
+                fecharModalCardapioDia();
+            }, 900);
+        }
+
+        function atualizarOpcoesModalNovoPedido() {
+            const selectTam = document.getElementById('novo-tamanho');
+            if (selectTam) {
+                selectTam.innerHTML = `
+                    <option value="Marmita Pequena (P)|${cardapioAtual.preco_p}">Marmita P — R$ ${cardapioAtual.preco_p.toFixed(2).replace('.', ',')}</option>
+                    <option value="Marmita Média (M)|${cardapioAtual.preco_m}" selected>Marmita M — R$ ${cardapioAtual.preco_m.toFixed(2).replace('.', ',')}</option>
+                    <option value="Marmita Grande (G)|${cardapioAtual.preco_g}">Marmita G — R$ ${cardapioAtual.preco_g.toFixed(2).replace('.', ',')}</option>
+                    <option value="Marmitex Executiva Especial|${cardapioAtual.preco_exec}">Marmitex Executiva — R$ ${cardapioAtual.preco_exec.toFixed(2).replace('.', ',')}</option>
+                `;
+            }
+            const inputCarne = document.getElementById('novo-carne');
+            if (inputCarne) {
+                const listaCarnes = cardapioAtual.carnes.split(',').map(c => c.trim()).filter(Boolean);
+                if (listaCarnes.length > 0) {
+                    inputCarne.placeholder = 'Ex: ' + listaCarnes.slice(0, 2).join(' ou ');
+                }
+            }
+        }
+
+        function copiarStatusZap() {
+            const carnesList = cardapioAtual.carnes.split(',').map(c => '• ' + c.trim()).join('\n');
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            
+            const texto = `🍽️ *CARDÁPIO DE HOJE (${dataHoje}) • RESTAURANTE MORIÁ* 🍽️
+📍 Av. Paraíso, 1093 — Paraíso do Tocantins
+⏰ Pedidos das 10h30 às 14h00 | WhatsApp: (63) 99215-9171
+
+🍱 *TAMANHOS DE MARMITA:*
+• Marmita P: R$ ${cardapioAtual.preco_p.toFixed(2).replace('.', ',')}
+• Marmita M: R$ ${cardapioAtual.preco_m.toFixed(2).replace('.', ',')} (Mais pedida ⭐)
+• Marmita G: R$ ${cardapioAtual.preco_g.toFixed(2).replace('.', ',')}
+• Executiva Especial: R$ ${cardapioAtual.preco_exec.toFixed(2).replace('.', ',')}
+
+🥩 *CARNES DO DIA:*
+${carnesList}
+${cardapioAtual.especial ? `⭐ *Especial do Dia:* ${cardapioAtual.especial}\n` : ''}
+🥗 *ACOMPANHAMENTOS:*
+${cardapioAtual.guarnicoes}
+
+🛵 *Entrega rápida e quentinha em Paraíso do Tocantins!*
+👉 Responda este status ou peça no nosso WhatsApp: https://wa.me/5563992159171`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('✅ Cardápio formatado copiado com sucesso!\n\nAgora é só abrir o WhatsApp e colar no Status ou enviar nos grupos.');
+            }).catch(() => {
+                prompt('Copie o texto abaixo para postar no WhatsApp:', texto);
+            });
+        }
+
         let pedidos = JSON.parse(localStorage.getItem('moria_pedidos_kds')) || PEDIDOS_PADRAO;
         let quantidadePedidosAnterior = pedidos.length;
 
@@ -591,12 +792,13 @@
 
         // Função de Demonstração Ao Vivo
         function simularPedidoAoVivo() {
-            const nomes = ['Lucas Oliveira', 'Fernanda Souza', 'Rogério Santos', 'Dr. Eduardo Lima', 'Patrícia Mendes'];
-            const carnes = ['Costela no Bafo com Mandioca', 'Carne de Sol na Brasa', 'Frango ao Molho com Quiabo', 'Bife Acebolado Especial'];
+            const nomes = ['Lucas Oliveira', 'Fernanda Souza', 'Rogério Santos', 'Dr. Eduardo Lima', 'Patrícia Mendes', 'Juliana Castro', 'Marcos Vinícius'];
+            const carnesList = cardapioAtual.carnes.split(',').map(s => s.trim()).filter(Boolean);
+            const carnes = carnesList.length > 0 ? carnesList : ['Costela no Bafo com Mandioca', 'Carne de Sol na Brasa', 'Frango ao Molho com Quiabo', 'Bife Acebolado Especial'];
             const tamanhos = [
-                { nome: 'Marmita Grande (G)', preco: 26.00 },
-                { nome: 'Marmitex Executiva Especial', preco: 30.00 },
-                { nome: 'Marmita Média (M)', preco: 22.00 }
+                { nome: 'Marmita Grande (G)', preco: cardapioAtual.preco_g },
+                { nome: 'Marmitex Executiva Especial', preco: cardapioAtual.preco_exec },
+                { nome: 'Marmita Média (M)', preco: cardapioAtual.preco_m }
             ];
 
             const nomeEscolhido = nomes[Math.floor(Math.random() * nomes.length)];
@@ -613,11 +815,11 @@
                 tamanho: tamEscolhido.nome,
                 preco_marmita: tamEscolhido.preco,
                 carne: carneEscolhida,
-                guarnicoes: 'Arroz branco, Feijão Tropeiro, Mandioca frita, Vinagrete',
+                guarnicoes: cardapioAtual.guarnicoes || 'Arroz branco, Feijão Tropeiro, Mandioca frita, Vinagrete',
                 observacoes: 'Pedido feito pelo WhatsApp via Robô Moriá',
                 bebida: 'Coca-Cola Lata 350ml',
                 preco_bebida: 6.00,
-                taxa_entrega: 5.00,
+                taxa_entrega: cardapioAtual.taxa_entrega || 5.00,
                 endereco: 'Av. Bernardo Sayão, nº ' + Math.floor(100 + Math.random() * 900),
                 bairro: 'Setor Serrano',
                 pagamento: 'PIX (PAGO / COMPROVANTE)'
@@ -894,6 +1096,7 @@
 
         // Funções do Modal Novo Pedido
         function abrirModalNovoPedido() {
+            atualizarOpcoesModalNovoPedido();
             document.getElementById('modal-novo-pedido').classList.remove('hidden');
         }
 
@@ -919,7 +1122,7 @@
                 observacoes: document.getElementById('novo-obs').value,
                 bebida: bebidaVal[0] || null,
                 preco_bebida: parseFloat(bebidaVal[1]) || 0,
-                taxa_entrega: 5.00,
+                taxa_entrega: cardapioAtual.taxa_entrega || 5.00,
                 endereco: document.getElementById('novo-endereco').value,
                 bairro: document.getElementById('novo-bairro').value,
                 pagamento: document.getElementById('novo-pagamento').value
@@ -940,11 +1143,13 @@
             if (e.key === 'Escape') {
                 fecharModalImpressao();
                 fecharModalNovoPedido();
+                fecharModalCardapioDia();
             }
         });
 
         // Inicialização com checagem de PIN
         verificarAutenticacao();
+        atualizarOpcoesModalNovoPedido();
     </script>
 </body>
 </html>
